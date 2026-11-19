@@ -490,8 +490,11 @@ document.addEventListener('change',e=>{if(e.target.dataset.in==='r'&&e.target.da
 $('#imp').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.buckets)throw 0;if(!confirm('اطلاعات فعلی با پشتیبان جایگزین بشه؟'))return;S=d;save();load();render();toast('بازیابی شد ✓')}catch(x){toast('فایل پشتیبان معتبر نیست')}};r.readAsText(f);e.target.value=''});
 
 function deepLink(){
-  const q=new URLSearchParams(location.search||location.hash.slice(1)),name=(q.get('add')||'').trim();
+  const q=new URLSearchParams(location.search||location.hash.slice(1));
   if(!q.has('add'))return;
+  let raw='';try{raw=decodeURIComponent(location.search||location.hash)}catch(e){raw=location.search}
+  let name=(q.get('add')||'').replace(/=k$/,'').trim();
+  if(!q.get('k')&&!q.get('amt')){const m=toEn(raw).match(/k[=&\s]*([\d.]+)/);if(m)q.set('k',m[1])}
   history.replaceState(null,'',location.pathname);
   let amt=parseAmt(q.get('amt')||'');const k=parseFloat(toEn(q.get('k')||'').replace(/[^\d.]/g,''));if(!amt&&k)amt=Math.round(k*1000);
   const sig=name+'|'+amt,last=JSON.parse(localStorage.getItem('jib-link')||'{}');
