@@ -135,6 +135,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 .fade{animation:fade .35s ease}
 @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .jd{display:grid;grid-template-columns:auto 1fr 1.6fr 1.3fr;gap:6px;align-items:center;margin-bottom:14px}.jd .lbl{padding:0 4px}.jd select{text-align:center;text-align-last:center;padding:12px 6px}
+.pill{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translate(-50%,40px);opacity:0;pointer-events:none;z-index:30;padding:12px 20px;border-radius:99px;font-weight:800;font-size:14px;background:linear-gradient(135deg,var(--a1),var(--a2));box-shadow:0 10px 30px rgba(236,72,153,.45);transition:all .3s;white-space:nowrap}
+.pill.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .goal{font-size:11px;color:var(--mute);margin-top:4px;position:relative}
 </style>
 </head>
@@ -150,6 +152,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 <div class="ov" id="ov" data-a="close"></div>
 <div class="sheet" id="sheet"></div>
 <div class="toast" id="toast"></div>
+<button class="pill" id="pill" data-a="paste">📋 ثبت خرج از میانبر</button>
 <input type="file" id="imp" accept="application/json,.json" style="display:none">
 
 <script>
@@ -492,15 +495,18 @@ $('#imp').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;c
 
 function deepLink(){
   try{localStorage.setItem('jib-lastopen',new Date().toLocaleTimeString('fa-IR')+' — '+location.href)}catch(e){}
-  const q=new URLSearchParams(location.search||location.hash.slice(1));
-  if(!q.has('add'))return;
-  let raw='';try{raw=decodeURIComponent(location.search||location.hash)}catch(e){raw=location.search}
+  const src=location.search||location.hash;if(!/add=/.test(src))return false;
+  history.replaceState(null,'',location.pathname);return quickAdd(src);
+}
+function quickAdd(src){
+  src=String(src);const qi=src.indexOf('add=');if(qi<0)return false;src=src.slice(qi);
+  const q=new URLSearchParams(src);
+  let raw='';try{raw=decodeURIComponent(src)}catch(e){raw=src}
   let name=(q.get('add')||'').replace(/=k$/,'').trim();
   if(!q.get('k')&&!q.get('amt')){const m=toEn(raw).match(/k[=&\s]*([\d.]+)/);if(m)q.set('k',m[1])}
-  history.replaceState(null,'',location.pathname);
   let amt=parseAmt(q.get('amt')||'');const k=parseFloat(toEn(q.get('k')||'').replace(/[^\d.]/g,''));if(!amt&&k)amt=Math.round(k*1000);
   const sig=name+'|'+amt,last=JSON.parse(localStorage.getItem('jib-link')||'{}');
-  if(last.sig===sig&&Date.now()-last.t<15000)return;localStorage.setItem('jib-link',JSON.stringify({sig,t:Date.now()}));
+  if(last.sig===sig&&Date.now()-last.t<15000)return false;localStorage.setItem('jib-link',JSON.stringify({sig,t:Date.now()}));
   const nz=t=>String(t).replace(/[\u200c\s]+و[\u200c\s]+/g,'').replace(/[\u200c\s‌ـ]/g,'').replace(/ي/g,'ی').replace(/ك/g,'ک'),N=nz(name);
   let b=S.buckets.find(x=>nz(x.name)===N),cat='';
   if(!b)for(const x of S.buckets){const c=(x.cats||[]).find(c=>nz(c)===N);if(c){b=x;cat=c;break}}
@@ -508,11 +514,20 @@ function deepLink(){
   if(!b&&N)b=S.buckets.find(x=>nz(x.name).includes(N)||N.includes(nz(x.name)));
   if(!b){b=B('ess')||S.buckets[0];cat=name}
   UI.tab='home';UI.month=mKey(Date.now());
-  if(!amt){render();openSheet({bucketId:b.id,amount:0,cat,note:'',date:todayISO()});return}
+  if(!amt){render();openSheet({bucketId:b.id,amount:0,cat,note:'',date:todayISO()});return true}
   S.expenses.push({id:uid(),bucketId:b.id,amount:amt,cat,note:q.get('note')||'',ts:Date.now()});save();render();buzz();
-  setTimeout(()=>toast('✓ ثبت شد: '+(cat||b.name)+' • '+short(amt)+' تومان'),300);
+  setTimeout(()=>toast('✓ ثبت شد: '+(cat||b.name)+' • '+short(amt)+' تومان'),300);return true;
 }
-render();deepLink();
+/* clipboard fallback: shortcut copies the link, user taps the pill */
+let pillT;
+function showPill(){if(!(navigator.clipboard&&navigator.clipboard.readText))return;const p=$('#pill');p.classList.add('on');clearTimeout(pillT);pillT=setTimeout(()=>p.classList.remove('on'),25000)}
+A.paste=async()=>{$('#pill').classList.remove('on');
+  try{const t=await navigator.clipboard.readText();
+    if(!/add=/.test(t))return toast('چیزی از میانبر توی کلیپ‌بورد نیست');
+    try{await navigator.clipboard.writeText(' ')}catch(e){}
+    if(!quickAdd(t))toast('این مورد قبلاً ثبت شده')}catch(e){toast('اجازهٔ Paste داده نشد')}};
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!deepLink())showPill()});
+render();if(!deepLink())showPill();
 window.addEventListener('pageshow',e=>{if(e.persisted)deepLink()});
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 if('serviceWorker' in navigator&&location.protocol==='https:'&&window.top===window.self)navigator.serviceWorker.register('sw.js').catch(()=>{});
