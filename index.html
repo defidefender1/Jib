@@ -496,8 +496,11 @@ function deepLink(){
   let amt=parseAmt(q.get('amt')||'');const k=parseFloat(toEn(q.get('k')||'').replace(/[^\d.]/g,''));if(!amt&&k)amt=Math.round(k*1000);
   const sig=name+'|'+amt,last=JSON.parse(localStorage.getItem('jib-link')||'{}');
   if(last.sig===sig&&Date.now()-last.t<15000)return;localStorage.setItem('jib-link',JSON.stringify({sig,t:Date.now()}));
-  let b=S.buckets.find(x=>x.name===name),cat='';
-  if(!b){b=S.buckets.find(x=>(x.cats||[]).includes(name));cat=name}
+  const nz=t=>String(t).replace(/[\u200c\s]+و[\u200c\s]+/g,'').replace(/[\u200c\s‌ـ]/g,'').replace(/ي/g,'ی').replace(/ك/g,'ک'),N=nz(name);
+  let b=S.buckets.find(x=>nz(x.name)===N),cat='';
+  if(!b)for(const x of S.buckets){const c=(x.cats||[]).find(c=>nz(c)===N);if(c){b=x;cat=c;break}}
+  if(!b&&N)for(const x of S.buckets){const c=(x.cats||[]).find(c=>nz(c).includes(N)||N.includes(nz(c)));if(c){b=x;cat=c;break}}
+  if(!b&&N)b=S.buckets.find(x=>nz(x.name).includes(N)||N.includes(nz(x.name)));
   if(!b){b=B('ess')||S.buckets[0];cat=name}
   UI.tab='home';UI.month=mKey(Date.now());
   if(!amt){render();openSheet({bucketId:b.id,amount:0,cat,note:'',date:todayISO()});return}
