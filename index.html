@@ -157,7 +157,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
 
 <script>
 /* ============ Utils ============ */
-const KEY='jib-v1';
+const KEY='jib-v1',VER='۹';
 const MONTHS=['فروردین','اردیبهشت','خرداد','تیر','مرداد','شهریور','مهر','آبان','آذر','دی','بهمن','اسفند'];
 const $=s=>document.querySelector(s);
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -288,6 +288,7 @@ function vHome(){
   <div class="stat"><span class="lbl">مانده بودجه</span><b style="${budget-spent<0?'color:#fecdd3':''}">${short(budget-spent)}</b></div>
   <div class="stat"><span class="lbl">کنار گذاشته</span><b>${short(invested)}</b></div></div></div>
   <div class="acts"><button class="btn p" data-a="tab" data-v="split">＋ درآمد جدید</button><button class="btn s" data-a="addexp">− ثبت هزینه</button></div>
+  <button class="btn s w" style="height:44px;font-size:13px;margin-top:4px" data-a="paste">📋 ثبت خرج از میانبر (Paste)</button>
   ${rec}
   <h3>جیب‌ها <small>روی هر کدوم بزن تا هزینه ثبت کنی</small></h3>
   <div class="grid">${bks}</div>
@@ -373,7 +374,7 @@ function vPlan(){
   <div class="two"><button class="btn s" data-a="export">⬇︎ خروجی پشتیبان</button><button class="btn s" data-a="import">⬆︎ بازیابی</button></div>
   <button class="btn d w" style="margin-top:10px" data-a="wipe">پاک کردن همه اطلاعات</button></div>
   <p class="lbl" style="text-align:center;margin-top:16px">اطلاعات فقط روی همین گوشی ذخیره میشه • ماهی یک بار پشتیبان بگیر</p>
-  <p class="lbl" style="text-align:center;margin-top:8px;direction:ltr;word-break:break-all;opacity:.6">${esc(decodeURIComponent(localStorage.getItem('jib-lastopen')||''))}</p>`;
+  <p class="lbl" style="text-align:center;margin-top:8px;direction:ltr;word-break:break-all;opacity:.6">نسخه ${VER} • ${esc(decodeURIComponent(localStorage.getItem('jib-lastopen')||''))}</p>`;
 }
 
 /* ============ Sheet ============ */
