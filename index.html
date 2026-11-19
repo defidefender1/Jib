@@ -369,7 +369,8 @@ function vPlan(){
   <div class="card"><div class="row" data-a="rial" style="padding:6px"><div class="mid"><b>کپی مبلغ به ریال</b><span>برای چسباندن در اپ بانک</span></div><div class="tgl ${S.settings.copyRial?'on':''}">${S.settings.copyRial?'✓':''}</div></div>
   <div class="two"><button class="btn s" data-a="export">⬇︎ خروجی پشتیبان</button><button class="btn s" data-a="import">⬆︎ بازیابی</button></div>
   <button class="btn d w" style="margin-top:10px" data-a="wipe">پاک کردن همه اطلاعات</button></div>
-  <p class="lbl" style="text-align:center;margin-top:16px">اطلاعات فقط روی همین گوشی ذخیره میشه • ماهی یک بار پشتیبان بگیر</p>`;
+  <p class="lbl" style="text-align:center;margin-top:16px">اطلاعات فقط روی همین گوشی ذخیره میشه • ماهی یک بار پشتیبان بگیر</p>
+  <p class="lbl" style="text-align:center;margin-top:8px;direction:ltr;word-break:break-all;opacity:.6">${esc(decodeURIComponent(localStorage.getItem('jib-lastopen')||''))}</p>`;
 }
 
 /* ============ Sheet ============ */
@@ -490,6 +491,7 @@ document.addEventListener('change',e=>{if(e.target.dataset.in==='r'&&e.target.da
 $('#imp').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.buckets)throw 0;if(!confirm('اطلاعات فعلی با پشتیبان جایگزین بشه؟'))return;S=d;save();load();render();toast('بازیابی شد ✓')}catch(x){toast('فایل پشتیبان معتبر نیست')}};r.readAsText(f);e.target.value=''});
 
 function deepLink(){
+  try{localStorage.setItem('jib-lastopen',new Date().toLocaleTimeString('fa-IR')+' — '+location.href)}catch(e){}
   const q=new URLSearchParams(location.search||location.hash.slice(1));
   if(!q.has('add'))return;
   let raw='';try{raw=decodeURIComponent(location.search||location.hash)}catch(e){raw=location.search}
